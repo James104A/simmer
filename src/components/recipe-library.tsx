@@ -352,7 +352,13 @@ export function RecipeLibrary({
       {/* Favorite prompt modal */}
       {favoritePrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-sm rounded-xl border border-border bg-background-elevated p-6 shadow-xl">
+          <div className="relative mx-4 w-full max-w-sm rounded-xl border border-border bg-background-elevated p-6 shadow-xl">
+            <button
+              onClick={() => { setFavoritePrompt(null); setDiscardConfirm(false); }}
+              className="absolute top-3 right-3 text-foreground-muted transition-colors hover:text-foreground"
+            >
+              &times;
+            </button>
             {discardConfirm ? (
               <>
                 <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
