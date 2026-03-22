@@ -117,6 +117,8 @@ export function RecipeDetail({
   const [favoritePrompt, setFavoritePrompt] = useState(false);
   const [discardConfirm, setDiscardConfirm] = useState(false);
   const [savingFavorite, setSavingFavorite] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   function handleCookButton() {
     if (recipe.cookCount === 0) {
@@ -196,6 +198,24 @@ export function RecipeDetail({
     } catch {
       setCookLogs((prev) => prev.filter((l) => l.id !== optimisticLog.id));
       setLocalCookCount((c) => Math.max(0, c - 1));
+    }
+  }
+
+  async function handleRemoveFromLibrary() {
+    setDeleting(true);
+    try {
+      if (isOwner) {
+        await fetch(`/api/recipes/${recipe.id}`, { method: "DELETE" });
+      } else {
+        await fetch("/api/saved-recipes", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipeId: recipe.id }),
+        });
+      }
+      router.push("/");
+    } catch {
+      setDeleting(false);
     }
   }
 
@@ -624,6 +644,58 @@ export function RecipeDetail({
           <p className="mt-3 whitespace-pre-wrap text-foreground-muted">
             {recipe.personalNotes}
           </p>
+        </div>
+      )}
+
+      {/* Remove from library */}
+      {(isOwner || isSaved) && (
+        <div className="mt-12 border-t border-border pt-6 pb-4">
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="text-sm text-foreground-muted transition-colors hover:text-accent-wine-light"
+          >
+            Remove from Library
+          </button>
+        </div>
+      )}
+
+      {/* Remove confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative mx-4 w-full max-w-sm rounded-xl border border-border bg-background-elevated p-6 shadow-xl">
+            <button
+              onClick={() => setShowDeleteConfirm(false)}
+              className="absolute top-3 right-3 text-foreground-muted transition-colors hover:text-foreground"
+            >
+              &times;
+            </button>
+            <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+              Remove from Library?
+            </h3>
+            <p className="mt-2 text-sm text-foreground-muted">
+              {isOwner ? (
+                <>This will permanently delete <span className="font-medium text-foreground">{recipe.title}</span> and all its cook history.</>
+              ) : (
+                <>This will remove <span className="font-medium text-foreground">{recipe.title}</span> from your Want to Try list.</>
+              )}
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                disabled={deleting}
+                onClick={handleRemoveFromLibrary}
+                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? "Removing..." : "Yes, Remove It"}
+              </button>
+              <button
+                disabled={deleting}
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
