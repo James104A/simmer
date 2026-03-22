@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  /* Base surfaces */
+  --background: #1b1513;
+  --background-elevated: #252019;
+  --background-hover: #302923;
+  --foreground: #f2ece4;
+  --foreground-muted: #a89888;
+
+  /* Accent colors */
+  --accent-amber: #c87941;
+  --accent-amber-light: #d9905a;
+  --accent-wine: #7a2e3b;
+  --accent-wine-light: #9b3d50;
+  --accent-sage: #6b7c5e;
+  --accent-sage-light: #8a9d7a;
+  --accent-copper: #b56a2e;
+  --accent-burgundy: #6b2038;
+  --accent-burgundy-light: #8a3350;
+
+  /* Borders */
+  --border: #38302a;
+  --border-light: #4a3f38;
+
+  /* Glass surfaces */
+  --surface-glass: rgba(255, 240, 220, 0.05);
+  --surface-glass-hover: rgba(255, 240, 220, 0.09);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-elevated: var(--background-elevated);
+  --color-background-hover: var(--background-hover);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-accent-amber: var(--accent-amber);
+  --color-accent-amber-light: var(--accent-amber-light);
+  --color-accent-wine: var(--accent-wine);
+  --color-accent-wine-light: var(--accent-wine-light);
+  --color-accent-sage: var(--accent-sage);
+  --color-accent-sage-light: var(--accent-sage-light);
+  --color-accent-copper: var(--accent-copper);
+  --color-accent-burgundy: var(--accent-burgundy);
+  --color-accent-burgundy-light: var(--accent-burgundy-light);
+  --color-border: var(--border);
+  --color-border-light: var(--border-light);
+  --color-surface-glass: var(--surface-glass);
+  --color-surface-glass-hover: var(--surface-glass-hover);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
+}
+
+.card-glass {
+  background: var(--background-elevated);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+.card-glass:hover {
+  background: var(--background-hover);
+  border-color: var(--border-light);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--border-light);
+  transform: translateY(-2px);
+}
+
+body {
+  background: var(--background);
+  background-image:
+    radial-gradient(ellipse at 15% 50%, rgba(107, 32, 56, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 20%, rgba(200, 121, 65, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 90%, rgba(181, 106, 46, 0.03) 0%, transparent 40%);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}

@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  recipes      Recipe[]
+  cookLogs     CookLog[]
+  savedRecipes SavedRecipe[]
+  sessions     Session[]
+  feedEvents   FeedEvent[]
+
+  sentRequests     FriendRequest[] @relation("SentRequests")
+  receivedRequests FriendRequest[] @relation("ReceivedRequests")
+
+  partnershipsSent     Partnership[] @relation("PartnershipSent")
+  partnershipsReceived Partnership[] @relation("PartnershipReceived")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+}
+
+model FriendRequest {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+  status     String   // "pending" | "accepted" | "declined"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+}
+
+model SavedRecipe {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, recipeId])
+  @@index([userId])
+}
+
+model Recipe {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  recipeType String  // "linked" | "native"
+
+  // Linked recipe fields
+  url              String?
+  imageUrl         String?  // extracted hero image from source URL
+  descriptionShort String?
+  highlights       String?  // JSON array of strings
+  ingredients      String?  // JSON array of strings
+  steps            String?  // JSON array of strings
+
+  // Common fields
+  personalNotes      String?
+  seasonTags         String?  // JSON array
+  dishTypes          String?  // JSON array
+  cuisineTypes       String?  // JSON array
+  goodForTags        String?  // JSON array
+  dietaryTags        String?  // JSON array
+  mainIngredientTags String?  // JSON array
+
+  // Time
+  prepTimeMinutes  Int?
+  cookTimeMinutes  Int?
+  totalTimeMinutes Int?
+  servings         String?
+
+  // Go-to signals
+  rating       Int?
+  isFavorite   Boolean  @default(false)
+  cookCount    Int      @default(0)
+  lastCookedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  aiSummaryJobs AISummaryJob[]
+  cookLogs      CookLog[]
+  savedBy       SavedRecipe[]
+  feedEvents    FeedEvent[]
+
+  @@index([userId])
+}
+
+model AISummaryJob {
+  id        String   @id @default(cuid())
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  status       String  // "pending" | "processing" | "completed" | "failed"
+  sourceUrl    String
+  fetchedAt    DateTime?
+  modelUsed    String?
+  rawExtract   String?
+  errorMessage String?
+
+  createdAt DateTime @default(now())
+}
+
+model CookLog {
+  id        String   @id @default(cuid())
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  cookedAt  DateTime @default(now())
+  notes     String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, cookedAt])
+}
+
+model Partnership {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("PartnershipSent", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("PartnershipReceived", fields: [receiverId], references: [id], onDelete: Cascade)
+  status     String   // "pending" | "accepted"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+}
+
+model FeedEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType String   // "cook" | "add_recipe" | "save_recipe"
+  recipeId  String
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  metadata  String?  // JSON: { notes, cookedAt, rating } for cook events
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}

@@ -1,15 +1,21 @@
-JFAT Cookbook
-=============
+# Simmer
 
-This repository contains the JFAT Cookbook project.
-
-## Getting Started
-
-Clone the repository:
+## Hello world (local dev)
 
 ```bash
-git clone https://github.com/James104A/JFAT-Cookbook.git
+npm install
+npm run dev
 ```
 
-Then open the project in your editor of choice.
+Open [http://localhost:3000](http://localhost:3000). You should see **Hello world**.
 
+## Production check
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+The full recipe app may live in a separate checkout (e.g. `go-to-recipes/`); this repo root is a minimal Next.js app you can push to GitHub and run anywhere.
