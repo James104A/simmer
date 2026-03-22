@@ -50,6 +50,7 @@ export function RecipeLibrary({
   const [filters, setFilters] = useState<RecipeFilters>({});
   const [favoritePrompt, setFavoritePrompt] = useState<{ recipeId: string; title: string } | null>(null);
   const [savingFavorite, setSavingFavorite] = useState(false);
+  const [discardConfirm, setDiscardConfirm] = useState(false);
 
   const knownDeliciousCount = useMemo(
     () => initialRecipes.filter((r) => r.cookCount > 0).length,
@@ -79,22 +80,46 @@ export function RecipeLibrary({
     setFavoritePrompt({ recipeId, title: recipeTitle });
   }
 
-  async function handleFavoriteResponse(saveFavorite: boolean) {
+  async function handleCookedKnownDelicious(recipeId: string) {
+    await fetch(`/api/recipes/${recipeId}/cook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cookedAt: new Date().toISOString() }),
+    });
+    router.refresh();
+  }
+
+  async function handleFavoriteResponse() {
     if (!favoritePrompt) return;
     setSavingFavorite(true);
 
-    // Single API call: logs cook, sets favorite if requested, creates feed event with context
     await fetch(`/api/recipes/${favoritePrompt.recipeId}/cook`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         cookedAt: new Date().toISOString(),
-        favorite: saveFavorite,
+        favorite: true,
       }),
     });
 
     setSavingFavorite(false);
     setFavoritePrompt(null);
+    router.refresh();
+  }
+
+  async function handleDiscard() {
+    if (!favoritePrompt) return;
+    setSavingFavorite(true);
+
+    await fetch(`/api/recipes/${favoritePrompt.recipeId}/cook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ discard: true }),
+    });
+
+    setSavingFavorite(false);
+    setFavoritePrompt(null);
+    setDiscardConfirm(false);
     router.refresh();
   }
 
@@ -313,7 +338,7 @@ export function RecipeLibrary({
                   ? (recipe as RecipeWithUser).user!.name
                   : undefined
             }
-            onCooked={handleCooked}
+            onCooked={activeTab === "known-delicious" ? handleCookedKnownDelicious : handleCooked}
           />
         ))}
       </div>
@@ -328,28 +353,57 @@ export function RecipeLibrary({
       {favoritePrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="mx-4 w-full max-w-sm rounded-xl border border-border bg-background-elevated p-6 shadow-xl">
-            <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
-              Nice! You cooked it.
-            </h3>
-            <p className="mt-2 text-sm text-foreground-muted">
-              Add <span className="font-medium text-foreground">{favoritePrompt.title}</span> to your Known Favorites?
-            </p>
-            <div className="mt-5 flex gap-2">
-              <button
-                disabled={savingFavorite}
-                onClick={() => handleFavoriteResponse(true)}
-                className="flex-1 rounded-lg bg-accent-amber px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-amber-light disabled:opacity-50"
-              >
-                Yes, Add to Favorites
-              </button>
-              <button
-                disabled={savingFavorite}
-                onClick={() => handleFavoriteResponse(false)}
-                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground disabled:opacity-50"
-              >
-                No Thanks
-              </button>
-            </div>
+            {discardConfirm ? (
+              <>
+                <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+                  Are you sure?
+                </h3>
+                <p className="mt-2 text-sm text-foreground-muted">
+                  This will remove <span className="font-medium text-foreground">{favoritePrompt.title}</span> from your library.
+                </p>
+                <div className="mt-5 flex gap-2">
+                  <button
+                    disabled={savingFavorite}
+                    onClick={handleDiscard}
+                    className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                  >
+                    Yes, Remove It
+                  </button>
+                  <button
+                    disabled={savingFavorite}
+                    onClick={() => setDiscardConfirm(false)}
+                    className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+                  Nice! You cooked it.
+                </h3>
+                <p className="mt-2 text-sm text-foreground-muted">
+                  Add <span className="font-medium text-foreground">{favoritePrompt.title}</span> to your Known Favorites?
+                </p>
+                <div className="mt-5 flex gap-2">
+                  <button
+                    disabled={savingFavorite}
+                    onClick={handleFavoriteResponse}
+                    className="flex-1 rounded-lg bg-accent-amber px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-amber-light disabled:opacity-50"
+                  >
+                    Yes, Add to Favorites
+                  </button>
+                  <button
+                    disabled={savingFavorite}
+                    onClick={() => setDiscardConfirm(true)}
+                    className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground disabled:opacity-50"
+                  >
+                    No, Discard
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

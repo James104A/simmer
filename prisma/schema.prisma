@@ -160,9 +160,9 @@ model FeedEvent {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  eventType String   // "cook" | "add_recipe" | "save_recipe"
-  recipeId  String
-  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  eventType String   // "cook" | "cook_favorite" | "cook_discard" | "add_recipe" | "save_recipe"
+  recipeId  String?
+  recipe    Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
   metadata  String?  // JSON: { notes, cookedAt, rating } for cook events
 
   createdAt DateTime @default(now())

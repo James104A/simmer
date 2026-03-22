@@ -58,15 +58,16 @@ export default async function FeedPage() {
   );
 
   const feedItems = events.map((event) => {
-    const metadata = event.metadata ? JSON.parse(event.metadata) : {};
+    const parsedMeta = event.metadata ? JSON.parse(event.metadata) : {};
     return {
       id: event.id,
       eventType: event.eventType,
       createdAt: event.createdAt.toISOString(),
-      notes: metadata.notes ?? null,
+      notes: parsedMeta.notes ?? null,
+      metadata: event.metadata,
       user: event.user,
       recipe: event.recipe,
-      isSaved: savedRecipeIds.has(event.recipe.id),
+      isSaved: event.recipe ? savedRecipeIds.has(event.recipe.id) : false,
     };
   });
 

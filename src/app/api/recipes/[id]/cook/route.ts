@@ -32,6 +32,42 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
   const { id } = await context.params;
   const body = await request.json().catch(() => ({}));
+  const discard = body.discard === true;
+
+  // Discard path: snapshot recipe data, create feed event, then delete
+  if (discard) {
+    await prisma.$transaction(async (tx) => {
+      const recipe = await tx.recipe.findUniqueOrThrow({ where: { id } });
+      const snapshot = {
+        title: recipe.title,
+        imageUrl: recipe.imageUrl,
+        descriptionShort: recipe.descriptionShort,
+        cuisineTypes: recipe.cuisineTypes,
+        dishTypes: recipe.dishTypes,
+      };
+
+      await tx.feedEvent.create({
+        data: {
+          userId: user.id,
+          eventType: "cook_discard",
+          recipeId: id,
+          metadata: JSON.stringify(snapshot),
+        },
+      });
+
+      if (recipe.userId === user.id) {
+        // Own recipe: delete entirely (SetNull cascade preserves feed event)
+        await tx.recipe.delete({ where: { id } });
+      } else {
+        // Saved recipe: remove the reference only
+        await tx.savedRecipe.deleteMany({ where: { userId: user.id, recipeId: id } });
+      }
+    });
+
+    return NextResponse.json({ success: true });
+  }
+
+  // Normal cook path
   const cookedAt = body.cookedAt ? new Date(body.cookedAt) : new Date();
   const notes = body.notes?.trim() || null;
   const favorite = body.favorite === true;

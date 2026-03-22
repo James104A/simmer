@@ -8,6 +8,7 @@ export interface FeedItemData {
   eventType: string;
   createdAt: string;
   notes: string | null;
+  metadata: string | null;
   user: { id: string; name: string };
   recipe: {
     id: string;
@@ -18,7 +19,7 @@ export interface FeedItemData {
     dishTypes: string | null;
     totalTimeMinutes: number | null;
     rating: number | null;
-  };
+  } | null;
   isSaved: boolean;
 }
 
