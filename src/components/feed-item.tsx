@@ -5,6 +5,7 @@ import { getRecipeImage } from "@/lib/recipe-images";
 
 const EVENT_LABELS: Record<string, string> = {
   cook: "cooked this",
+  cook_favorite: "cooked this and added it to favorites",
   add_recipe: "added a new recipe",
   save_recipe: "wants to try this",
 };

@@ -99,6 +99,15 @@ export function RecipeLibrary({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isFavorite: true }),
       });
+      // Post a cook_favorite event to the feed
+      await fetch("/api/feed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipeId: favoritePrompt.recipeId,
+          eventType: "cook_favorite",
+        }),
+      });
     }
 
     setSavingFavorite(false);
@@ -321,7 +330,7 @@ export function RecipeLibrary({
                   ? (recipe as RecipeWithUser).user!.name
                   : undefined
             }
-            onCooked={activeTab === "want-to-try" ? handleCooked : undefined}
+            onCooked={handleCooked}
           />
         ))}
       </div>
@@ -340,7 +349,7 @@ export function RecipeLibrary({
               Nice! You cooked it.
             </h3>
             <p className="mt-2 text-sm text-foreground-muted">
-              Save <span className="font-medium text-foreground">{favoritePrompt.title}</span> to your favorites?
+              Add <span className="font-medium text-foreground">{favoritePrompt.title}</span> to your Known Favorites?
             </p>
             <div className="mt-5 flex gap-2">
               <button
@@ -348,7 +357,7 @@ export function RecipeLibrary({
                 onClick={() => handleFavoriteResponse(true)}
                 className="flex-1 rounded-lg bg-accent-amber px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-amber-light disabled:opacity-50"
               >
-                Yes, Favorite
+                Yes, Add to Favorites
               </button>
               <button
                 disabled={savingFavorite}
