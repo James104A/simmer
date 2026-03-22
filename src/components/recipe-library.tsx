@@ -72,20 +72,10 @@ export function RecipeLibrary({
 
   const clearFilters = () => setFilters({});
 
-  async function handleCooked(recipeId: string) {
-    // Find recipe title for the favorite prompt
+  function handleCooked(recipeId: string) {
     const allRecipes = [...initialRecipes, ...savedRecipes];
     const recipe = allRecipes.find((r) => r.id === recipeId);
     const recipeTitle = recipe?.title ?? "this recipe";
-
-    // Log the cook
-    await fetch(`/api/recipes/${recipeId}/cook`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cookedAt: new Date().toISOString() }),
-    });
-
-    // Show favorite prompt
     setFavoritePrompt({ recipeId, title: recipeTitle });
   }
 
@@ -93,22 +83,15 @@ export function RecipeLibrary({
     if (!favoritePrompt) return;
     setSavingFavorite(true);
 
-    if (saveFavorite) {
-      await fetch(`/api/recipes/${favoritePrompt.recipeId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isFavorite: true }),
-      });
-      // Post a cook_favorite event to the feed
-      await fetch("/api/feed", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipeId: favoritePrompt.recipeId,
-          eventType: "cook_favorite",
-        }),
-      });
-    }
+    // Single API call: logs cook, sets favorite if requested, creates feed event with context
+    await fetch(`/api/recipes/${favoritePrompt.recipeId}/cook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cookedAt: new Date().toISOString(),
+        favorite: saveFavorite,
+      }),
+    });
 
     setSavingFavorite(false);
     setFavoritePrompt(null);

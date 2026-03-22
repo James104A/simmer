@@ -34,6 +34,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const body = await request.json().catch(() => ({}));
   const cookedAt = body.cookedAt ? new Date(body.cookedAt) : new Date();
   const notes = body.notes?.trim() || null;
+  const favorite = body.favorite === true;
+
+  const recipeUpdate: Record<string, unknown> = {
+    cookCount: { increment: 1 },
+    lastCookedAt: cookedAt,
+  };
+  if (favorite) {
+    recipeUpdate.isFavorite = true;
+  }
 
   const [cookLog] = await prisma.$transaction([
     prisma.cookLog.create({
@@ -41,17 +50,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }),
     prisma.recipe.update({
       where: { id },
-      data: {
-        cookCount: { increment: 1 },
-        lastCookedAt: cookedAt,
-      },
+      data: recipeUpdate,
     }),
     prisma.feedEvent.create({
       data: {
         userId: user.id,
-        eventType: "cook",
+        eventType: favorite ? "cook_favorite" : "cook",
         recipeId: id,
-        metadata: JSON.stringify({ notes, cookedAt: cookedAt.toISOString() }),
+        metadata: JSON.stringify({ notes, cookedAt: cookedAt.toISOString(), favorite }),
       },
     }),
   ]);
