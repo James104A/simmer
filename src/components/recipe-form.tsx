@@ -114,6 +114,8 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
   const [extracting, setExtracting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [favoritePrompt, setFavoritePrompt] = useState<{ recipeId: string } | null>(null);
+  const [savingFavorite, setSavingFavorite] = useState(false);
 
   function toggleTag(
     current: string[],
@@ -275,15 +277,11 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
 
       const saved = await res.json();
 
-      // If marking as cooked, log a cook immediately
+      // If marking as cooked, show favorite prompt before logging
       if (markAsCooked && !isEditing) {
-        await fetch(`/api/recipes/${saved.id}/cook`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            cookedAt: new Date().toISOString(),
-          }),
-        });
+        setSaving(false);
+        setFavoritePrompt({ recipeId: saved.id });
+        return;
       }
 
       router.push(`/recipes/${saved.id}`);
@@ -292,6 +290,24 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
       setError("Something went wrong. Please try again.");
       setSaving(false);
     }
+  }
+
+  async function handleFavoriteResponse(saveFavorite: boolean) {
+    if (!favoritePrompt) return;
+    setSavingFavorite(true);
+
+    await fetch(`/api/recipes/${favoritePrompt.recipeId}/cook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cookedAt: new Date().toISOString(),
+        favorite: saveFavorite,
+      }),
+    });
+
+    setSavingFavorite(false);
+    router.push(`/recipes/${favoritePrompt.recipeId}`);
+    router.refresh();
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -568,6 +584,36 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
           )}
         </div>
       </form>
+
+      {/* Favorite prompt modal */}
+      {favoritePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-xl border border-border bg-background-elevated p-6 shadow-xl">
+            <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+              Nice! You cooked it.
+            </h3>
+            <p className="mt-2 text-sm text-foreground-muted">
+              Add <span className="font-medium text-foreground">{title}</span> to your Known Favorites?
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                disabled={savingFavorite}
+                onClick={() => handleFavoriteResponse(true)}
+                className="flex-1 rounded-lg bg-accent-amber px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-amber-light disabled:opacity-50"
+              >
+                Yes, Add to Favorites
+              </button>
+              <button
+                disabled={savingFavorite}
+                onClick={() => handleFavoriteResponse(false)}
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground disabled:opacity-50"
+              >
+                No Thanks
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
