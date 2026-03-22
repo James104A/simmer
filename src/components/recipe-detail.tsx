@@ -28,6 +28,25 @@ export function RecipeDetail({
     ? JSON.parse(recipe.ingredients)
     : [];
   const steps: string[] = recipe.steps ? JSON.parse(recipe.steps) : [];
+  const cuisines: string[] = recipe.cuisineTypes
+    ? JSON.parse(recipe.cuisineTypes)
+    : [];
+  const dishTypes: string[] = recipe.dishTypes
+    ? JSON.parse(recipe.dishTypes)
+    : [];
+  const goodFor: string[] = recipe.goodForTags
+    ? JSON.parse(recipe.goodForTags)
+    : [];
+  const seasons: string[] = recipe.seasonTags
+    ? JSON.parse(recipe.seasonTags)
+    : [];
+  const dietary: string[] = recipe.dietaryTags
+    ? JSON.parse(recipe.dietaryTags)
+    : [];
+  const mainIngredients: string[] = recipe.mainIngredientTags
+    ? JSON.parse(recipe.mainIngredientTags)
+    : [];
+  const allTags = [...cuisines, ...dishTypes, ...goodFor, ...seasons, ...mainIngredients];
   const image = getRecipeImage(recipe);
 
   // Image editor state
@@ -556,6 +575,57 @@ export function RecipeDetail({
 
       {recipe.descriptionShort && (
         <p className="mt-6 text-foreground-muted">{recipe.descriptionShort}</p>
+      )}
+
+      {/* Meta info: time, servings, dietary */}
+      {(recipe.totalTimeMinutes || recipe.prepTimeMinutes || recipe.cookTimeMinutes || recipe.servings || dietary.length > 0) && (
+        <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-foreground-muted">
+          {recipe.totalTimeMinutes ? (
+            <span className="rounded-lg bg-background-elevated px-3 py-1 border border-border">
+              {recipe.totalTimeMinutes} min total
+            </span>
+          ) : (
+            <>
+              {recipe.prepTimeMinutes && (
+                <span className="rounded-lg bg-background-elevated px-3 py-1 border border-border">
+                  {recipe.prepTimeMinutes} min prep
+                </span>
+              )}
+              {recipe.cookTimeMinutes && (
+                <span className="rounded-lg bg-background-elevated px-3 py-1 border border-border">
+                  {recipe.cookTimeMinutes} min cook
+                </span>
+              )}
+            </>
+          )}
+          {recipe.servings && (
+            <span className="rounded-lg bg-background-elevated px-3 py-1 border border-border">
+              Serves {recipe.servings}
+            </span>
+          )}
+          {dietary.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-lg bg-accent-sage/10 px-3 py-1 text-accent-sage-light border border-accent-sage/20"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Tags */}
+      {allTags.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {allTags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full border border-border bg-surface-glass px-2.5 py-0.5 text-xs text-foreground-muted"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
       )}
 
       {highlights.length > 0 && (
