@@ -170,21 +170,13 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim()) {
-      setError("Title is required.");
-      return;
-    }
-    setError("");
-    setSaving(true);
-
+  function buildBody() {
     const prep = prepTime ? parseInt(prepTime, 10) : null;
     const cook = cookTime ? parseInt(cookTime, 10) : null;
     const total =
       prep != null || cook != null ? (prep ?? 0) + (cook ?? 0) : null;
 
-    const body = {
+    return {
       title: title.trim(),
       recipeType,
       url: recipeType === "linked" ? url.trim() || null : null,
@@ -216,6 +208,17 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
       totalTimeMinutes: total,
       servings: servings.trim() || null,
     };
+  }
+
+  async function saveRecipe(markAsCooked: boolean) {
+    if (!title.trim()) {
+      setError("Title is required.");
+      return;
+    }
+    setError("");
+    setSaving(true);
+
+    const body = buildBody();
 
     try {
       const endpoint = isEditing
@@ -271,12 +274,30 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
       }
 
       const saved = await res.json();
+
+      // If marking as cooked, log a cook immediately
+      if (markAsCooked && !isEditing) {
+        await fetch(`/api/recipes/${saved.id}/cook`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cookedAt: new Date().toISOString(),
+          }),
+        });
+      }
+
       router.push(`/recipes/${saved.id}`);
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
       setSaving(false);
     }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    // For editing, just save normally
+    await saveRecipe(false);
   }
 
   const inputClass =
@@ -497,24 +518,54 @@ export function RecipeForm({ recipe }: RecipeFormProps) {
           <p className="text-sm text-accent-wine-light">{error}</p>
         )}
 
-        <div className="flex gap-2 pt-4">
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-accent-amber px-6 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-amber-light disabled:opacity-50"
-          >
-            {saving
-              ? "Saving..."
-              : isEditing
-                ? "Save Changes"
-                : "Add Recipe"}
-          </button>
-          <a
-            href={isEditing ? `/recipes/${recipe.id}` : "/"}
-            className="rounded-lg border border-border px-6 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground"
-          >
-            Cancel
-          </a>
+        <div className="flex flex-col gap-3 pt-4">
+          {isEditing ? (
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-lg bg-accent-amber px-6 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-amber-light disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+              <a
+                href={`/recipes/${recipe.id}`}
+                className="rounded-lg border border-border px-6 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground"
+              >
+                Cancel
+              </a>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm font-medium text-foreground">
+                How would you like to save this?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => saveRecipe(false)}
+                  className="rounded-lg border border-accent-amber px-6 py-2 text-sm font-medium text-accent-amber transition-colors hover:bg-accent-amber/10 disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Want to Try"}
+                </button>
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => saveRecipe(true)}
+                  className="rounded-lg bg-accent-sage px-6 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-sage-light disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Cooked"}
+                </button>
+                <a
+                  href="/"
+                  className="rounded-lg border border-border px-6 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground"
+                >
+                  Cancel
+                </a>
+              </div>
+            </>
+          )}
         </div>
       </form>
     </div>

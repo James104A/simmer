@@ -20,7 +20,7 @@ export default async function NewRecipePage() {
           &larr; Back to Library
         </a>
         <h1 className="mt-4 font-[family-name:var(--font-display)] text-2xl font-bold text-foreground">
-          Add New Recipe
+          Add a Recipe
         </h1>
         <div className="mt-6">
           <RecipeForm />

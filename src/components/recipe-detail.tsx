@@ -88,6 +88,23 @@ export function RecipeDetail({
     }
   }
 
+  // Favorite state
+  const [isFavorite, setIsFavorite] = useState(recipe.isFavorite);
+
+  async function handleToggleFavorite() {
+    const newValue = !isFavorite;
+    setIsFavorite(newValue);
+    try {
+      await fetch(`/api/recipes/${recipe.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFavorite: newValue }),
+      });
+    } catch {
+      setIsFavorite(!newValue);
+    }
+  }
+
   // Cook log state
   const [showCookForm, setShowCookForm] = useState(false);
   const [cookDate, setCookDate] = useState(
@@ -326,8 +343,11 @@ export function RecipeDetail({
           Cooked it! ({localCookCount})
         </button>
         {isOwner && (
-          <button className="text-sm text-foreground-muted transition-colors hover:text-accent-copper">
-            {recipe.isFavorite ? "★ Favorited" : "☆ Favorite"}
+          <button
+            onClick={handleToggleFavorite}
+            className="text-sm text-foreground-muted transition-colors hover:text-accent-copper"
+          >
+            {isFavorite ? "★ Favorited" : "☆ Favorite"}
           </button>
         )}
         {!isOwner && (

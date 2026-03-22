@@ -7,9 +7,10 @@ interface RecipeCardProps {
   recipe: Recipe;
   viewMode: "grid" | "list";
   ownerName?: string;
+  onCooked?: (recipeId: string) => void;
 }
 
-export function RecipeCard({ recipe, viewMode, ownerName }: RecipeCardProps) {
+export function RecipeCard({ recipe, viewMode, ownerName, onCooked }: RecipeCardProps) {
   const cuisines: string[] = recipe.cuisineTypes
     ? JSON.parse(recipe.cuisineTypes)
     : [];
@@ -104,6 +105,19 @@ export function RecipeCard({ recipe, viewMode, ownerName }: RecipeCardProps) {
           )}
           {recipe.cookCount > 0 && <span>Cooked {recipe.cookCount}x</span>}
         </div>
+
+        {onCooked && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onCooked(recipe.id);
+            }}
+            className="mt-3 w-full rounded-lg bg-accent-sage/20 px-3 py-1.5 text-sm font-medium text-accent-sage-light transition-colors hover:bg-accent-sage/30"
+          >
+            Cooked
+          </button>
+        )}
       </div>
     </a>
   );

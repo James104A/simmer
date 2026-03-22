@@ -82,7 +82,7 @@ export function NavBar({ user, pendingRequestCount = 0 }: NavBarProps) {
                 href="/recipes/new"
                 className="rounded-lg bg-accent-amber px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-amber-light"
               >
-                + Add Recipe
+                + Add
               </a>
               <LogoutButton />
             </>

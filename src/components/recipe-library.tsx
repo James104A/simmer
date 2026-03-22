@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Recipe } from "@/generated/prisma/client";
 import { SearchBar } from "./search-bar";
 import { FilterPanel } from "./filter-panel";
@@ -40,12 +41,15 @@ export function RecipeLibrary({
   savedRecipes = [],
   currentUserId,
 }: RecipeLibraryProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("known-delicious");
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filters, setFilters] = useState<RecipeFilters>({});
+  const [favoritePrompt, setFavoritePrompt] = useState<{ recipeId: string; title: string } | null>(null);
+  const [savingFavorite, setSavingFavorite] = useState(false);
 
   const knownDeliciousCount = useMemo(
     () => initialRecipes.filter((r) => r.cookCount > 0).length,
@@ -67,6 +71,40 @@ export function RecipeLibrary({
   };
 
   const clearFilters = () => setFilters({});
+
+  async function handleCooked(recipeId: string) {
+    // Find recipe title for the favorite prompt
+    const allRecipes = [...initialRecipes, ...savedRecipes];
+    const recipe = allRecipes.find((r) => r.id === recipeId);
+    const recipeTitle = recipe?.title ?? "this recipe";
+
+    // Log the cook
+    await fetch(`/api/recipes/${recipeId}/cook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cookedAt: new Date().toISOString() }),
+    });
+
+    // Show favorite prompt
+    setFavoritePrompt({ recipeId, title: recipeTitle });
+  }
+
+  async function handleFavoriteResponse(saveFavorite: boolean) {
+    if (!favoritePrompt) return;
+    setSavingFavorite(true);
+
+    if (saveFavorite) {
+      await fetch(`/api/recipes/${favoritePrompt.recipeId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFavorite: true }),
+      });
+    }
+
+    setSavingFavorite(false);
+    setFavoritePrompt(null);
+    router.refresh();
+  }
 
   const filteredRecipes = useMemo(() => {
     let results: (Recipe & { savedByUser?: boolean; ownerName?: string })[];
@@ -283,6 +321,7 @@ export function RecipeLibrary({
                   ? (recipe as RecipeWithUser).user!.name
                   : undefined
             }
+            onCooked={activeTab === "want-to-try" ? handleCooked : undefined}
           />
         ))}
       </div>
@@ -291,6 +330,36 @@ export function RecipeLibrary({
         <p className="py-12 text-center text-foreground-muted">
           No recipes found. Try adjusting your filters or add a new recipe.
         </p>
+      )}
+
+      {/* Favorite prompt modal */}
+      {favoritePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-sm rounded-xl border border-border bg-background-elevated p-6 shadow-xl">
+            <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+              Nice! You cooked it.
+            </h3>
+            <p className="mt-2 text-sm text-foreground-muted">
+              Save <span className="font-medium text-foreground">{favoritePrompt.title}</span> to your favorites?
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                disabled={savingFavorite}
+                onClick={() => handleFavoriteResponse(true)}
+                className="flex-1 rounded-lg bg-accent-amber px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-amber-light disabled:opacity-50"
+              >
+                Yes, Favorite
+              </button>
+              <button
+                disabled={savingFavorite}
+                onClick={() => handleFavoriteResponse(false)}
+                className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground disabled:opacity-50"
+              >
+                No Thanks
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
