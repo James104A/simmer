@@ -114,6 +114,47 @@ export function RecipeDetail({
   const [cookLogs, setCookLogs] = useState(recipe.cookLogs);
   const [localCookCount, setLocalCookCount] = useState(recipe.cookCount);
   const [submitting, setSubmitting] = useState(false);
+  const [favoritePrompt, setFavoritePrompt] = useState(false);
+  const [discardConfirm, setDiscardConfirm] = useState(false);
+  const [savingFavorite, setSavingFavorite] = useState(false);
+
+  function handleCookButton() {
+    if (recipe.cookCount === 0) {
+      // Want to Try: show favorite/discard prompt
+      setFavoritePrompt(true);
+    } else {
+      // Known Delicious: show inline cook form
+      setShowCookForm(!showCookForm);
+    }
+  }
+
+  async function handleFavoriteResponse() {
+    setSavingFavorite(true);
+    await fetch(`/api/recipes/${recipe.id}/cook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cookedAt: new Date().toISOString(),
+        favorite: true,
+      }),
+    });
+    setSavingFavorite(false);
+    setFavoritePrompt(false);
+    router.refresh();
+  }
+
+  async function handleDiscard() {
+    setSavingFavorite(true);
+    await fetch(`/api/recipes/${recipe.id}/cook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ discard: true }),
+    });
+    setSavingFavorite(false);
+    setFavoritePrompt(false);
+    setDiscardConfirm(false);
+    router.push("/");
+  }
 
   async function handleLogCook() {
     // Optimistic update: close form and increment count immediately
@@ -337,7 +378,7 @@ export function RecipeDetail({
           </span>
         )}
         <button
-          onClick={() => setShowCookForm(!showCookForm)}
+          onClick={handleCookButton}
           className="rounded-lg bg-accent-sage/20 px-3 py-1 text-sm text-accent-sage-light transition-colors hover:bg-accent-sage/30"
         >
           Cooked it! ({localCookCount})
@@ -410,6 +451,71 @@ export function RecipeDetail({
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Favorite/discard prompt modal (Want to Try recipes) */}
+      {favoritePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="relative mx-4 w-full max-w-sm rounded-xl border border-border bg-background-elevated p-6 shadow-xl">
+            <button
+              onClick={() => { setFavoritePrompt(false); setDiscardConfirm(false); }}
+              className="absolute top-3 right-3 text-foreground-muted transition-colors hover:text-foreground"
+            >
+              &times;
+            </button>
+            {discardConfirm ? (
+              <>
+                <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+                  Are you sure?
+                </h3>
+                <p className="mt-2 text-sm text-foreground-muted">
+                  This will remove <span className="font-medium text-foreground">{recipe.title}</span> from your library.
+                </p>
+                <div className="mt-5 flex gap-2">
+                  <button
+                    disabled={savingFavorite}
+                    onClick={handleDiscard}
+                    className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                  >
+                    Yes, Remove It
+                  </button>
+                  <button
+                    disabled={savingFavorite}
+                    onClick={() => setDiscardConfirm(false)}
+                    className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="font-[family-name:var(--font-display)] text-lg font-semibold text-foreground">
+                  Nice! You cooked it.
+                </h3>
+                <p className="mt-2 text-sm text-foreground-muted">
+                  Add <span className="font-medium text-foreground">{recipe.title}</span> to your Known Favorites?
+                </p>
+                <div className="mt-5 flex gap-2">
+                  <button
+                    disabled={savingFavorite}
+                    onClick={handleFavoriteResponse}
+                    className="flex-1 rounded-lg bg-accent-amber px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-accent-amber-light disabled:opacity-50"
+                  >
+                    Yes, Add to Favorites
+                  </button>
+                  <button
+                    disabled={savingFavorite}
+                    onClick={() => setDiscardConfirm(true)}
+                    className="flex-1 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground-muted transition-colors hover:bg-background-hover hover:text-foreground disabled:opacity-50"
+                  >
+                    No, Discard
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

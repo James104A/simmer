@@ -36,13 +36,11 @@ export async function GET(request: NextRequest) {
   }
 
   const friendIds = await getFriendIds(user.id);
-  if (friendIds.length === 0) {
-    return NextResponse.json([]);
-  }
+  const feedUserIds = [user.id, ...friendIds];
 
   const since = request.nextUrl.searchParams.get("since");
   const where: Record<string, unknown> = {
-    userId: { in: friendIds },
+    userId: { in: feedUserIds },
   };
   if (since) {
     where.createdAt = { gt: new Date(since) };

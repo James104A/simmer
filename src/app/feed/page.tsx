@@ -21,31 +21,30 @@ export default async function FeedPage() {
     getFriendIds(user.id),
   ]);
 
-  const events =
-    friendIds.length > 0
-      ? await prisma.feedEvent.findMany({
-          where: { userId: { in: friendIds } },
-          orderBy: { createdAt: "desc" },
-          take: 50,
-          include: {
-            recipe: {
-              select: {
-                id: true,
-                title: true,
-                imageUrl: true,
-                descriptionShort: true,
-                cuisineTypes: true,
-                dishTypes: true,
-                totalTimeMinutes: true,
-                rating: true,
-              },
-            },
-            user: {
-              select: { id: true, name: true },
-            },
-          },
-        })
-      : [];
+  const feedUserIds = [user.id, ...friendIds];
+
+  const events = await prisma.feedEvent.findMany({
+    where: { userId: { in: feedUserIds } },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    include: {
+      recipe: {
+        select: {
+          id: true,
+          title: true,
+          imageUrl: true,
+          descriptionShort: true,
+          cuisineTypes: true,
+          dishTypes: true,
+          totalTimeMinutes: true,
+          rating: true,
+        },
+      },
+      user: {
+        select: { id: true, name: true },
+      },
+    },
+  });
 
   // Get user's saved recipe IDs for marking saved state
   const savedRecipeIds = new Set(
