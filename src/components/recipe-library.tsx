@@ -51,6 +51,7 @@ export function RecipeLibrary({
   const [favoritePrompt, setFavoritePrompt] = useState<{ recipeId: string; title: string } | null>(null);
   const [savingFavorite, setSavingFavorite] = useState(false);
   const [discardConfirm, setDiscardConfirm] = useState(false);
+  const [favoriteNotes, setFavoriteNotes] = useState("");
 
   const knownDeliciousCount = useMemo(
     () => initialRecipes.filter((r) => r.cookCount > 0).length,
@@ -99,10 +100,12 @@ export function RecipeLibrary({
       body: JSON.stringify({
         cookedAt: new Date().toISOString(),
         favorite: true,
+        notes: favoriteNotes.trim() || undefined,
       }),
     });
 
     setSavingFavorite(false);
+    setFavoriteNotes("");
     setFavoritePrompt(null);
     router.refresh();
   }
@@ -118,6 +121,7 @@ export function RecipeLibrary({
     });
 
     setSavingFavorite(false);
+    setFavoriteNotes("");
     setFavoritePrompt(null);
     setDiscardConfirm(false);
     router.refresh();
@@ -354,7 +358,7 @@ export function RecipeLibrary({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="relative mx-4 w-full max-w-sm rounded-xl border border-border bg-background-elevated p-6 shadow-xl">
             <button
-              onClick={() => { setFavoritePrompt(null); setDiscardConfirm(false); }}
+              onClick={() => { setFavoritePrompt(null); setDiscardConfirm(false); setFavoriteNotes(""); }}
               className="absolute top-3 right-3 text-foreground-muted transition-colors hover:text-foreground"
             >
               &times;
@@ -392,7 +396,19 @@ export function RecipeLibrary({
                 <p className="mt-2 text-sm text-foreground-muted">
                   Add <span className="font-medium text-foreground">{favoritePrompt.title}</span> to your Known Favorites?
                 </p>
-                <div className="mt-5 flex gap-2">
+                <div className="mt-3">
+                  <label className="text-xs text-foreground-muted">
+                    Notes (optional)
+                  </label>
+                  <textarea
+                    value={favoriteNotes}
+                    onChange={(e) => setFavoriteNotes(e.target.value)}
+                    placeholder="How did it turn out? Any tweaks?"
+                    rows={2}
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50"
+                  />
+                </div>
+                <div className="mt-4 flex gap-2">
                   <button
                     disabled={savingFavorite}
                     onClick={handleFavoriteResponse}
