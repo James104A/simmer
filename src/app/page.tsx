@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getPartnerId } from "@/lib/partner";
 import { RecipeLibrary } from "@/components/recipe-library";
 import { NavBar } from "@/components/nav-bar";
+import { OnboardingModal } from "@/components/onboarding-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,9 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen">
+      {!user.hasSeenOnboarding && (
+        <OnboardingModal userName={user.name} />
+      )}
       <NavBar
         user={{ id: user.id, name: user.name }}
         pendingRequestCount={pendingCount}
