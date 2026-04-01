@@ -12,6 +12,7 @@ model User {
   email        String   @unique
   name         String
   passwordHash String
+  hasSeenOnboarding Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
