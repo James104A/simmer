@@ -157,9 +157,11 @@ export function RecipeDetail({
       body: JSON.stringify({
         cookedAt: new Date().toISOString(),
         favorite: true,
+        notes: cookNotes.trim() || undefined,
       }),
     });
     setSavingFavorite(false);
+    setCookNotes("");
     setFavoritePrompt(false);
     router.refresh();
   }
@@ -172,6 +174,7 @@ export function RecipeDetail({
       body: JSON.stringify({ discard: true }),
     });
     setSavingFavorite(false);
+    setCookNotes("");
     setFavoritePrompt(false);
     setDiscardConfirm(false);
     router.push("/");
@@ -499,7 +502,7 @@ export function RecipeDetail({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="relative mx-4 w-full max-w-sm rounded-xl border border-border bg-background-elevated p-6 shadow-xl">
             <button
-              onClick={() => { setFavoritePrompt(false); setDiscardConfirm(false); }}
+              onClick={() => { setFavoritePrompt(false); setDiscardConfirm(false); setCookNotes(""); }}
               className="absolute top-3 right-3 text-foreground-muted transition-colors hover:text-foreground"
             >
               &times;
@@ -537,7 +540,19 @@ export function RecipeDetail({
                 <p className="mt-2 text-sm text-foreground-muted">
                   Add <span className="font-medium text-foreground">{recipe.title}</span> to your Known Favorites?
                 </p>
-                <div className="mt-5 flex gap-2">
+                <div className="mt-3">
+                  <label className="text-xs text-foreground-muted">
+                    Notes (optional)
+                  </label>
+                  <textarea
+                    value={cookNotes}
+                    onChange={(e) => setCookNotes(e.target.value)}
+                    placeholder="How did it turn out? Any tweaks?"
+                    rows={2}
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted/50"
+                  />
+                </div>
+                <div className="mt-4 flex gap-2">
                   <button
                     disabled={savingFavorite}
                     onClick={handleFavoriteResponse}

@@ -169,7 +169,7 @@ export function FeedItem({ item }: FeedItemProps) {
 
       {/* Cook notes + actions */}
       <div className="border-t border-border px-5 py-3">
-        {item.eventType === "cook" && item.notes && (
+        {(item.eventType === "cook" || item.eventType === "cook_favorite") && item.notes && (
           <p className="mb-3 text-sm italic text-foreground-muted">
             &ldquo;{item.notes}&rdquo;
           </p>
