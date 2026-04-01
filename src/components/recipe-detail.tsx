@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Recipe, CookLog } from "@/generated/prisma/client";
 import { getRecipeImage } from "@/lib/recipe-images";
+import { useWakeLock } from "@/hooks/use-wake-lock";
 
 interface RecipeDetailProps {
   recipe: Recipe & { cookLogs: CookLog[] };
@@ -21,6 +22,16 @@ export function RecipeDetail({
   isSaved: initialIsSaved = false,
 }: RecipeDetailProps) {
   const router = useRouter();
+  const { isActive: cookModeActive, isSupported: wakeLockSupported, request: requestWakeLock, release: releaseWakeLock } = useWakeLock();
+
+  async function handleToggleCookMode() {
+    if (cookModeActive) {
+      await releaseWakeLock();
+    } else {
+      await requestWakeLock();
+    }
+  }
+
   const highlights: string[] = recipe.highlights
     ? JSON.parse(recipe.highlights)
     : [];
@@ -442,7 +453,32 @@ export function RecipeDetail({
             {isSaved ? "Saved to Want to Try" : "Save to Want to Try"}
           </button>
         )}
+        {wakeLockSupported && (
+          <button
+            onClick={handleToggleCookMode}
+            className={`rounded-lg px-3 py-1 text-sm transition-colors ${
+              cookModeActive
+                ? "bg-accent-copper/20 text-accent-copper-light hover:bg-accent-copper/30"
+                : "bg-background-elevated text-foreground-muted border border-border hover:bg-background-hover hover:text-foreground"
+            }`}
+          >
+            {cookModeActive ? "🔥 Cook Mode On" : "Cook Mode"}
+          </button>
+        )}
       </div>
+
+      {/* Cook Mode indicator banner */}
+      {cookModeActive && (
+        <div className="mt-3 flex items-center gap-2 rounded-lg bg-accent-copper/10 border border-accent-copper/20 px-3 py-2 text-sm text-accent-copper-light">
+          <span>Screen will stay awake while you cook.</span>
+          <button
+            onClick={releaseWakeLock}
+            className="ml-auto text-xs text-foreground-muted hover:text-foreground"
+          >
+            Turn off
+          </button>
+        </div>
+      )}
 
       {/* Inline cook form */}
       {showCookForm && (
