@@ -55,7 +55,9 @@ ${extractedText}`,
 }
 
 /** Use Gemini with URL context tool to extract recipe data directly from a URL.
- *  This bypasses Cloudflare and other bot protection since Google fetches the page. */
+ *  This bypasses Cloudflare and other bot protection since Google fetches the page.
+ *  Note: responseMimeType cannot be used with tools in the Gemini API, so we
+ *  parse the JSON from the text response manually. */
 export async function extractRecipeFromUrlViaAI(
   url: string
 ): Promise<AISummaryResult> {
@@ -67,11 +69,13 @@ export async function extractRecipeFromUrlViaAI(
 
 Recipe URL: ${url}`,
     config: {
-      responseMimeType: "application/json",
+      // responseMimeType cannot be combined with tools in the Gemini API
       tools: [{ urlContext: {} }],
     },
   });
 
   const text = response.text || "";
-  return JSON.parse(text) as AISummaryResult;
+  // Strip markdown code fences if present (Gemini often wraps JSON in ```json...```)
+  const cleaned = text.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/, "").trim();
+  return JSON.parse(cleaned) as AISummaryResult;
 }
