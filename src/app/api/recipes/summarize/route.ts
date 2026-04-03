@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { extractFromUrl } from "@/lib/extract";
-import { summarizeRecipeUrl } from "@/lib/ai";
+import { summarizeRecipeUrl, extractRecipeFromUrlViaAI } from "@/lib/ai";
 import { getCurrentUser } from "@/lib/auth";
 
 // POST /api/recipes/summarize — Extract recipe data from URL
@@ -17,7 +17,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { text, imageUrl, structured } = await extractFromUrl(url);
+    // Try server-side fetch first (fast path — works for most sites)
+    let text: string | null = null;
+    let imageUrl: string | null = null;
+    let structured: Awaited<ReturnType<typeof extractFromUrl>>["structured"] =
+      null;
+    let fetchFailed = false;
+
+    try {
+      const extracted = await extractFromUrl(url);
+      text = extracted.text;
+      imageUrl = extracted.imageUrl;
+      structured = extracted.structured;
+    } catch {
+      // Server-side fetch failed (likely Cloudflare/bot protection)
+      fetchFailed = true;
+    }
 
     // Start with structured data if available (even if incomplete)
     const result: Record<string, unknown> = {
@@ -47,7 +62,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(result);
     }
 
-    // Try AI to fill in gaps (or extract everything if no structured data)
+    // If fetch failed entirely, use Gemini with URL context to extract directly
+    if (fetchFailed && process.env.GEMINI_API_KEY) {
+      try {
+        const aiResult = await extractRecipeFromUrlViaAI(url);
+        if (aiResult.title) {
+          return NextResponse.json({
+            ...result,
+            title: aiResult.title,
+            descriptionShort: aiResult.descriptionShort,
+            highlights: aiResult.highlights || [],
+            ingredients: aiResult.ingredients,
+            steps: aiResult.steps,
+            prepTimeMinutes: aiResult.prepTimeMinutes,
+            cookTimeMinutes: aiResult.cookTimeMinutes,
+            servings: aiResult.servings,
+            method: "ai-url-context",
+          });
+        }
+      } catch {
+        // AI URL context also failed — fall through to error
+      }
+    }
+
+    // Try AI with extracted text to fill in gaps
     if (text && process.env.GEMINI_API_KEY) {
       try {
         const aiResult = await summarizeRecipeUrl(text);

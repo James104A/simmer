@@ -11,19 +11,7 @@ export interface AISummaryResult {
   servings: string | null;
 }
 
-export async function summarizeRecipeUrl(
-  extractedText: string
-): Promise<AISummaryResult> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY environment variable is not set");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
-
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: `You are a recipe data extractor. Given the following text extracted from a recipe webpage, extract ALL recipe data into a JSON object. The text may include visible page content and/or JSON-LD structured data — use all available information.
+const RECIPE_EXTRACTION_PROMPT = `You are a recipe data extractor. Extract ALL recipe data into a JSON object.
 
 Required fields (extract every field — do not leave ingredients or steps empty if they appear anywhere in the text):
 
@@ -36,12 +24,51 @@ Required fields (extract every field — do not leave ingredients or steps empty
 - "cookTimeMinutes": Cook time in minutes as a number, or null if not found. Convert all times to minutes.
 - "servings": Servings as a string (e.g. "4", "6-8"), or null if not found.
 
-Respond ONLY with valid JSON, no other text.
+Respond ONLY with valid JSON, no other text.`;
+
+function getGenAI(): GoogleGenAI {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY environment variable is not set");
+  }
+  return new GoogleGenAI({ apiKey });
+}
+
+export async function summarizeRecipeUrl(
+  extractedText: string
+): Promise<AISummaryResult> {
+  const ai = getGenAI();
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: `${RECIPE_EXTRACTION_PROMPT}
 
 Recipe text:
 ${extractedText}`,
     config: {
       responseMimeType: "application/json",
+    },
+  });
+
+  const text = response.text || "";
+  return JSON.parse(text) as AISummaryResult;
+}
+
+/** Use Gemini with URL context tool to extract recipe data directly from a URL.
+ *  This bypasses Cloudflare and other bot protection since Google fetches the page. */
+export async function extractRecipeFromUrlViaAI(
+  url: string
+): Promise<AISummaryResult> {
+  const ai = getGenAI();
+
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: `${RECIPE_EXTRACTION_PROMPT}
+
+Recipe URL: ${url}`,
+    config: {
+      responseMimeType: "application/json",
+      tools: [{ urlContext: {} }],
     },
   });
 
