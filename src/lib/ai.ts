@@ -54,29 +54,47 @@ ${extractedText}`,
   return JSON.parse(text) as AISummaryResult;
 }
 
+/** Parse JSON from Gemini text response, handling markdown code fences and refusals */
+function parseGeminiJson(text: string): AISummaryResult {
+  const fenceMatch = text.match(/```(?:json)?\s*\n([\s\S]*?)\n```/i);
+  const cleaned = fenceMatch ? fenceMatch[1].trim() : text.trim();
+
+  if (!cleaned.startsWith("{") && !cleaned.startsWith("[")) {
+    throw new Error(`Gemini did not return JSON. Response: ${cleaned.slice(0, 200)}`);
+  }
+
+  return JSON.parse(cleaned) as AISummaryResult;
+}
+
 /** Use Gemini with URL context tool to extract recipe data directly from a URL.
- *  This bypasses Cloudflare and other bot protection since Google fetches the page.
- *  Note: responseMimeType cannot be used with tools in the Gemini API, so we
- *  parse the JSON from the text response manually. */
+ *  Tries urlContext first (direct fetch), then falls back to googleSearch grounding.
+ *  Note: responseMimeType cannot be combined with tools in the Gemini API. */
 export async function extractRecipeFromUrlViaAI(
   url: string
 ): Promise<AISummaryResult> {
   const ai = getGenAI();
 
+  // Try urlContext first — Google fetches the page directly
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `${RECIPE_EXTRACTION_PROMPT}\n\nRecipe URL: ${url}`,
+      config: {
+        tools: [{ urlContext: {} }],
+      },
+    });
+    return parseGeminiJson(response.text || "");
+  } catch (urlContextError) {
+    console.error("Gemini urlContext failed, trying googleSearch:", urlContextError);
+  }
+
+  // Fallback: use Google Search grounding to find the recipe content
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: `${RECIPE_EXTRACTION_PROMPT}
-
-Recipe URL: ${url}`,
+    contents: `${RECIPE_EXTRACTION_PROMPT}\n\nSearch for and extract the complete recipe from this page: ${url}`,
     config: {
-      // responseMimeType cannot be combined with tools in the Gemini API
-      tools: [{ urlContext: {} }],
+      tools: [{ googleSearch: {} }],
     },
   });
-
-  const text = response.text || "";
-  // Extract JSON from response — Gemini wraps it in ```json ... ``` when responseMimeType isn't set
-  const fenceMatch = text.match(/```(?:json)?\s*\n([\s\S]*?)\n```/i);
-  const cleaned = fenceMatch ? fenceMatch[1].trim() : text.trim();
-  return JSON.parse(cleaned) as AISummaryResult;
+  return parseGeminiJson(response.text || "");
 }
