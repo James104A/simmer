@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
             method: "ai-url-context",
           });
         }
-      } catch {
+      } catch (aiError) {
+        console.error("Gemini URL context extraction failed:", aiError);
         // AI URL context also failed — fall through to error
       }
     }
