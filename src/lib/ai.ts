@@ -75,7 +75,8 @@ Recipe URL: ${url}`,
   });
 
   const text = response.text || "";
-  // Strip markdown code fences if present (Gemini often wraps JSON in ```json...```)
-  const cleaned = text.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/, "").trim();
+  // Extract JSON from response — Gemini wraps it in ```json ... ``` when responseMimeType isn't set
+  const fenceMatch = text.match(/```(?:json)?\s*\n([\s\S]*?)\n```/i);
+  const cleaned = fenceMatch ? fenceMatch[1].trim() : text.trim();
   return JSON.parse(cleaned) as AISummaryResult;
 }
