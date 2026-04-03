@@ -54,7 +54,8 @@ ${extractedText}`,
   return JSON.parse(text) as AISummaryResult;
 }
 
-/** Parse JSON from Gemini text response, handling markdown code fences and refusals */
+/** Parse JSON from Gemini text response, handling markdown code fences and refusals.
+ *  Throws if the response isn't valid recipe JSON (must have title + ingredients). */
 function parseGeminiJson(text: string): AISummaryResult {
   const fenceMatch = text.match(/```(?:json)?\s*\n([\s\S]*?)\n```/i);
   const cleaned = fenceMatch ? fenceMatch[1].trim() : text.trim();
@@ -63,16 +64,37 @@ function parseGeminiJson(text: string): AISummaryResult {
     throw new Error(`Gemini did not return JSON. Response: ${cleaned.slice(0, 200)}`);
   }
 
-  return JSON.parse(cleaned) as AISummaryResult;
+  const parsed = JSON.parse(cleaned) as AISummaryResult;
+
+  // Validate the result actually contains recipe data — Gemini sometimes returns
+  // error JSON like {"error": "Could not access..."} which parses fine but is useless
+  if (!parsed.title || !parsed.ingredients || parsed.ingredients.length === 0) {
+    throw new Error(`Gemini returned JSON but no recipe data. Keys: ${Object.keys(parsed).join(", ")}`);
+  }
+
+  return parsed;
 }
 
-/** Derive a human-readable recipe name from a URL slug.
+/** Derive a site name and recipe name from a URL for search queries.
  *  e.g. "https://www.seriouseats.com/english-pea-salad-with-bacon-recipe-11938180"
- *  → "serious eats english pea salad with bacon recipe" */
-function recipeNameFromUrl(url: string): string {
+ *  → { site: "Serious Eats", name: "English Pea Salad With Bacon" } */
+function recipeInfoFromUrl(url: string): { site: string; name: string } {
   try {
     const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, "").replace(/\.\w+$/, "").replace(/[.-]/g, " ");
+    // "seriouseats.com" → "Serious Eats", "bonappetit.com" → "Bon Appetit"
+    const rawHost = parsed.hostname.replace(/^www\./, "").replace(/\.com$|\.org$|\.net$/, "");
+    // Split compound names: "seriouseats" → "serious eats", "bonappetit" → "bon appetit"
+    const site = rawHost
+      .replace(/[.-]/g, " ")
+      .replace(/([a-z])([A-Z])/g, "$1 $2") // camelCase
+      .replace(/(serious)(eats)/i, "$1 $2")
+      .replace(/(bon)(appetit)/i, "$1 $2")
+      .replace(/(all)(recipes)/i, "$1 $2")
+      .replace(/(food)(network)/i, "$1 $2")
+      .replace(/(budget)(bytes)/i, "$1 $2")
+      .replace(/(simply)(recipes)/i, "$1 $2")
+      .replace(/(taste)(of)(home)/i, "$1 $2 $3")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
     const slug = parsed.pathname
       .split("/")
       .filter(Boolean)
@@ -82,10 +104,11 @@ function recipeNameFromUrl(url: string): string {
       .replace(/\b\d{5,}\b/g, "") // remove long numeric IDs
       .replace(/\brecipe\b/gi, "") // remove noise word "recipe"
       .replace(/\s+/g, " ")
-      .trim();
-    return `${host} ${name}`.trim();
+      .trim()
+      .replace(/\b\w/g, (c) => c.toUpperCase()); // Title Case
+    return { site, name };
   } catch {
-    return url;
+    return { site: "", name: url };
   }
 }
 
@@ -124,10 +147,11 @@ export async function extractRecipeFromUrlViaAI(
   }
 
   // Tier 2: googleSearch — search by recipe name derived from URL slug
-  const recipeName = recipeNameFromUrl(url);
+  const { site, name } = recipeInfoFromUrl(url);
+  const searchQuery = site ? `the ${site} recipe called "${name}"` : `the recipe "${name}"`;
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: `Search for the recipe "${recipeName}" and extract ALL of its details into this exact JSON format:\n\n${AI_JSON_FORMAT}\n\nRespond ONLY with the JSON object, no markdown fences, no explanation.`,
+    contents: `Search for ${searchQuery} and extract ALL of its details into this exact JSON format:\n\n${AI_JSON_FORMAT}\n\nRespond ONLY with the JSON object, no markdown fences, no explanation.`,
     config: {
       tools: [{ googleSearch: {} }],
     },
