@@ -89,21 +89,7 @@ function recipeNameFromUrl(url: string): string {
   }
 }
 
-/** Use Gemini with Google Search to find and extract recipe data when direct fetch fails.
- *  Searches by recipe name derived from the URL, which is more reliable than
- *  asking Gemini to fetch the URL directly (Cloudflare blocks both urlContext and direct fetch).
- *  Note: responseMimeType cannot be combined with tools in the Gemini API. */
-export async function extractRecipeFromUrlViaAI(
-  url: string
-): Promise<AISummaryResult> {
-  const ai = getGenAI();
-  const recipeName = recipeNameFromUrl(url);
-
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: `Search for the recipe "${recipeName}" and extract ALL of its details into this exact JSON format:
-
-{
+const AI_JSON_FORMAT = `{
   "title": "recipe name",
   "descriptionShort": "1-2 sentence summary",
   "highlights": ["3-5 bullet points about the recipe"],
@@ -112,9 +98,36 @@ export async function extractRecipeFromUrlViaAI(
   "prepTimeMinutes": null,
   "cookTimeMinutes": null,
   "servings": null
-}
+}`;
 
-Respond ONLY with the JSON object, no markdown fences, no explanation.`,
+/** Use Gemini to extract recipe data directly from a URL when server-side fetch fails.
+ *  Tries urlContext first (direct page access — works on many sites), then falls back
+ *  to googleSearch by recipe name (works even on Cloudflare-protected sites).
+ *  Note: responseMimeType cannot be combined with tools in the Gemini API. */
+export async function extractRecipeFromUrlViaAI(
+  url: string
+): Promise<AISummaryResult> {
+  const ai = getGenAI();
+
+  // Tier 1: urlContext — Google fetches the page directly (works on non-Cloudflare sites)
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: `${RECIPE_EXTRACTION_PROMPT}\n\nExtract the recipe from this URL: ${url}\n\nRespond ONLY with the JSON object, no markdown fences, no explanation.`,
+      config: {
+        tools: [{ urlContext: {} }],
+      },
+    });
+    return parseGeminiJson(response.text || "");
+  } catch (err) {
+    console.error("Gemini urlContext failed, falling back to googleSearch:", err);
+  }
+
+  // Tier 2: googleSearch — search by recipe name derived from URL slug
+  const recipeName = recipeNameFromUrl(url);
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: `Search for the recipe "${recipeName}" and extract ALL of its details into this exact JSON format:\n\n${AI_JSON_FORMAT}\n\nRespond ONLY with the JSON object, no markdown fences, no explanation.`,
     config: {
       tools: [{ googleSearch: {} }],
     },
