@@ -66,35 +66,59 @@ function parseGeminiJson(text: string): AISummaryResult {
   return JSON.parse(cleaned) as AISummaryResult;
 }
 
-/** Use Gemini with URL context tool to extract recipe data directly from a URL.
- *  Tries urlContext first (direct fetch), then falls back to googleSearch grounding.
+/** Derive a human-readable recipe name from a URL slug.
+ *  e.g. "https://www.seriouseats.com/english-pea-salad-with-bacon-recipe-11938180"
+ *  → "serious eats english pea salad with bacon recipe" */
+function recipeNameFromUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").replace(/\.\w+$/, "").replace(/[.-]/g, " ");
+    const slug = parsed.pathname
+      .split("/")
+      .filter(Boolean)
+      .pop() || "";
+    const name = slug
+      .replace(/[-_]/g, " ")
+      .replace(/\b\d{5,}\b/g, "") // remove long numeric IDs
+      .replace(/\brecipe\b/gi, "") // remove noise word "recipe"
+      .replace(/\s+/g, " ")
+      .trim();
+    return `${host} ${name}`.trim();
+  } catch {
+    return url;
+  }
+}
+
+/** Use Gemini with Google Search to find and extract recipe data when direct fetch fails.
+ *  Searches by recipe name derived from the URL, which is more reliable than
+ *  asking Gemini to fetch the URL directly (Cloudflare blocks both urlContext and direct fetch).
  *  Note: responseMimeType cannot be combined with tools in the Gemini API. */
 export async function extractRecipeFromUrlViaAI(
   url: string
 ): Promise<AISummaryResult> {
   const ai = getGenAI();
+  const recipeName = recipeNameFromUrl(url);
 
-  // Try urlContext first — Google fetches the page directly
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: `${RECIPE_EXTRACTION_PROMPT}\n\nRecipe URL: ${url}`,
-      config: {
-        tools: [{ urlContext: {} }],
-      },
-    });
-    return parseGeminiJson(response.text || "");
-  } catch (urlContextError) {
-    console.error("Gemini urlContext failed, trying googleSearch:", urlContextError);
-  }
-
-  // Fallback: use Google Search grounding to find the recipe content
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
-    contents: `${RECIPE_EXTRACTION_PROMPT}\n\nSearch for and extract the complete recipe from this page: ${url}`,
+    contents: `Search for the recipe "${recipeName}" and extract ALL of its details into this exact JSON format:
+
+{
+  "title": "recipe name",
+  "descriptionShort": "1-2 sentence summary",
+  "highlights": ["3-5 bullet points about the recipe"],
+  "ingredients": ["all ingredients with quantities"],
+  "steps": ["all cooking steps in order"],
+  "prepTimeMinutes": null,
+  "cookTimeMinutes": null,
+  "servings": null
+}
+
+Respond ONLY with the JSON object, no markdown fences, no explanation.`,
     config: {
       tools: [{ googleSearch: {} }],
     },
   });
+
   return parseGeminiJson(response.text || "");
 }
