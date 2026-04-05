@@ -220,6 +220,51 @@ const seedRecipes = [
   },
 ];
 
+// jfrauen user's recipes
+const jfrauenRecipes = [
+  {
+    title: "Crispy Baked Potato Salad",
+    recipeType: "native" as const,
+    descriptionShort:
+      "Crispy air-fried Yukon Gold potatoes and ham tossed in a creamy Dijon-herb dressing with peas.",
+    ingredients: JSON.stringify([
+      "3–4 Yukon Gold potatoes, peeled and cut into small cubes",
+      "Olive oil (for tossing)",
+      "Salt and pepper (to taste)",
+      "Slices or pieces of ham",
+      "½ cup mayonnaise",
+      "¼ cup sour cream",
+      "3 tbsp Dijon mustard",
+      "2 tsp lemon zest",
+      "¼ to ½ cup chopped herbs (cilantro and dill work well)",
+      "¼ red onion, finely chopped",
+      "1 cup peas",
+    ]),
+    steps: JSON.stringify([
+      "Parboil the cubed potatoes for 3–4 minutes. Drain and let them dry slightly.",
+      "Toss potatoes with olive oil, salt, and pepper.",
+      "Air fry at ~400°F for about 20 minutes (or broil ~10 minutes), until crispy and golden.",
+      "Add ham pieces during the last 5 minutes of cooking so they crisp up.",
+      "In a large bowl, mix together mayonnaise, sour cream, Dijon, lemon zest, herbs, red onion, and peas. Let sit while potatoes finish cooking.",
+      "Let the potatoes cool slightly (so they stay crispy but don't melt the dressing).",
+      "Toss potatoes and crispy ham with the dressing right before serving.",
+    ]),
+    personalNotes:
+      "Best served warm or room temp for max crispiness. Add a squeeze of lemon juice or extra herbs at the end if you want it brighter.",
+    seasonTags: JSON.stringify(["Spring", "Summer"]),
+    dishTypes: JSON.stringify(["Salad", "Side"]),
+    cuisineTypes: JSON.stringify(["American"]),
+    goodForTags: JSON.stringify(["Crowd/Potluck"]),
+    dietaryTags: JSON.stringify([]),
+    mainIngredientTags: JSON.stringify(["Pork"]),
+    prepTimeMinutes: 10,
+    cookTimeMinutes: 20,
+    totalTimeMinutes: 30,
+    servings: "4",
+    cookCount: 0,
+  },
+];
+
 // Second user's recipes for testing social features
 const user2Recipes = [
   {
@@ -280,10 +325,25 @@ async function main() {
     },
   });
 
+  const jfrauenUser = await prisma.user.create({
+    data: {
+      email: "jfrauen@gmail.com",
+      name: "jfrauen",
+      passwordHash,
+    },
+  });
+
   // Create recipes for user 1
   for (const recipe of seedRecipes) {
     await prisma.recipe.create({
       data: { ...recipe, userId: user1.id },
+    });
+  }
+
+  // Create recipes for jfrauen
+  for (const recipe of jfrauenRecipes) {
+    await prisma.recipe.create({
+      data: { ...recipe, userId: jfrauenUser.id },
     });
   }
 
@@ -319,7 +379,7 @@ async function main() {
   }
 
   console.log(
-    `Seeded 2 users, ${seedRecipes.length + user2Recipes.length} recipes, 1 friendship, 1 cook log.`
+    `Seeded 3 users, ${seedRecipes.length + jfrauenRecipes.length + user2Recipes.length} recipes, 1 friendship, 1 cook log.`
   );
 }
 
