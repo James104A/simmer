@@ -1,0 +1,24 @@
+# XcodeGen regenerates this — never commit
+Simmer.xcodeproj/
+Simmer.xcworkspace/
+
+# Build output
+build/
+DerivedData/
+*.xcarchive
+
+# User-specific
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad
+
+# CocoaPods (unused but just in case)
+Pods/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# Misc
+.DS_Store
+*.log
