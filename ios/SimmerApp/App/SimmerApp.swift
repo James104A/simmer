@@ -20,8 +20,20 @@ struct SimmerApp: App {
                         appState.handle(deepLink: link)
                     }
                 }
+                .onReceive(NotificationCenter.default.publisher(for: .simmerDeepLink)) { note in
+                    if let link = note.userInfo?["link"] as? AppState.DeepLink {
+                        appState.handle(deepLink: link)
+                    }
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active {
+                        UNUserNotificationCenter.current().setBadgeCount(0)
+                    }
+                }
         }
     }
+
+    @Environment(\.scenePhase) private var scenePhase
 }
 
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -58,7 +70,34 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse
     ) async {
-        // Deep-link handling happens in SimmerApp via onOpenURL; push tap can
-        // also mutate AppState directly if we add handling here later.
+        let userInfo = response.notification.request.content.userInfo
+        guard let type = userInfo["type"] as? String else { return }
+        let link: AppState.DeepLink?
+        switch type {
+        case "friend_request", "friend_accept":
+            link = .friends
+        case "partner_invite":
+            link = .friends
+        case "partner_cook":
+            if let recipeId = userInfo["recipeId"] as? String {
+                link = .recipe(id: recipeId)
+            } else {
+                link = .feed
+            }
+        default:
+            link = nil
+        }
+        guard let link else { return }
+        await MainActor.run {
+            NotificationCenter.default.post(
+                name: .simmerDeepLink,
+                object: nil,
+                userInfo: ["link": link]
+            )
+        }
     }
+}
+
+extension Notification.Name {
+    static let simmerDeepLink = Notification.Name("com.simmer.app.deepLink")
 }
