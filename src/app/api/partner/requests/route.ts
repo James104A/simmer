@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
 // GET /api/partner/requests — Get pending partner invites received
-export async function GET() {
-  const user = await getCurrentUser();
+export async function GET(request: NextRequest) {
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -22,7 +22,7 @@ export async function GET() {
 
 // PATCH /api/partner/requests — Accept or decline a partner invite
 export async function PATCH(request: NextRequest) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

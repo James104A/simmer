@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
 // GET /api/saved-recipes — List bookmarked recipes
-export async function GET() {
-  const user = await getCurrentUser();
+export async function GET(request: NextRequest) {
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -26,7 +26,7 @@ export async function GET() {
 
 // POST /api/saved-recipes — Bookmark a recipe
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/saved-recipes — Remove a bookmark
 export async function DELETE(request: NextRequest) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

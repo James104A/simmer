@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { sendPushToUser } from "@/lib/push";
 
 // GET /api/friends — List accepted friends
-export async function GET() {
-  const user = await getCurrentUser();
+export async function GET(request: NextRequest) {
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -29,7 +30,7 @@ export async function GET() {
 
 // POST /api/friends — Send a friend request
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -93,6 +94,12 @@ export async function POST(request: NextRequest) {
       receiverId: target.id,
       status: "pending",
     },
+  });
+
+  void sendPushToUser(target.id, {
+    title: "New friend request",
+    body: `${user.name} wants to add you as a friend`,
+    data: { type: "friend_request", senderId: user.id },
   });
 
   return NextResponse.json(friendRequest, { status: 201 });

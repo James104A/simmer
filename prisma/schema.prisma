@@ -12,6 +12,7 @@ model User {
   email        String   @unique
   name         String
   passwordHash String
+  appleSub     String?  @unique
   hasSeenOnboarding Boolean @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -21,12 +22,57 @@ model User {
   savedRecipes SavedRecipe[]
   sessions     Session[]
   feedEvents   FeedEvent[]
+  devices      Device[]
+  blocksMade   Block[]  @relation("Blocker")
+  blocksReceived Block[] @relation("Blocked")
+  reportsMade  Report[] @relation("Reporter")
 
   sentRequests     FriendRequest[] @relation("SentRequests")
   receivedRequests FriendRequest[] @relation("ReceivedRequests")
 
   partnershipsSent     Partnership[] @relation("PartnershipSent")
   partnershipsReceived Partnership[] @relation("PartnershipReceived")
+}
+
+model Device {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apnsToken   String   @unique
+  platform    String   // "ios"
+  appVersion  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Block {
+  id          String   @id @default(cuid())
+  blockerId   String
+  blocker     User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId   String
+  blocked     User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String
+  reporter    User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType  String   // "recipe" | "user" | "feed_event"
+  targetId    String
+  reason      String   // "spam" | "abuse" | "inappropriate" | "other"
+  details     String?
+  status      String   @default("pending") // "pending" | "reviewed" | "dismissed"
+  createdAt   DateTime @default(now())
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
 }
 
 model Session {

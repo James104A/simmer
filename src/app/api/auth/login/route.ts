@@ -29,6 +29,8 @@ export async function POST(request: NextRequest) {
 
   const response = NextResponse.json({
     success: true,
+    token,
+    expiresAt: expires.toISOString(),
     user: { id: user.id, name: user.name, email: user.email },
   });
 

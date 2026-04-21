@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 // POST /api/recipes/summarize — Extract recipe data from URL
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
