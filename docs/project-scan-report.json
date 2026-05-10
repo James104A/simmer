@@ -1,0 +1,59 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {
+    "started": "2026-05-09T00:00:00Z",
+    "last_updated": "2026-05-09T00:00:00Z",
+    "completed": "2026-05-09T00:00:00Z"
+  },
+  "mode": "initial_scan",
+  "scan_level": "deep",
+  "project_root": "/Users/jamesfrauen/dev/Simmer/.claude/worktrees/wizardly-joliot-a27101",
+  "project_knowledge": "/Users/jamesfrauen/dev/Simmer/.claude/worktrees/wizardly-joliot-a27101/docs",
+  "project_classification": {
+    "repository_type": "monolith",
+    "parts_count": 1
+  },
+  "project_types": [
+    {
+      "part_id": "simmer",
+      "project_type_id": "web",
+      "display_name": "Next.js Web App"
+    }
+  ],
+  "current_step": "completed",
+  "completed_steps": [
+    {"step": "step_1", "summary": "Classified as monolith Next.js web app (1 part)"},
+    {"step": "step_2", "summary": "Found existing README + product brief + PRD in _bmad-output"},
+    {"step": "step_3", "summary": "Tech stack: Next.js 16 / React 19 / Prisma 7 / Postgres / Tailwind v4 / Gemini"},
+    {"step": "step_4", "summary": "Conditional analysis complete (API, data models, components)"},
+    {"step": "step_5", "summary": "Source tree documented"},
+    {"step": "step_6", "summary": "Dev/deployment guide written"},
+    {"step": "step_8", "summary": "Architecture doc written"},
+    {"step": "step_9", "summary": "Supporting docs written"},
+    {"step": "step_10", "summary": "Master index generated"},
+    {"step": "step_11", "summary": "Validation complete"},
+    {"step": "step_12", "summary": "Workflow complete"}
+  ],
+  "outputs_generated": [
+    "project-scan-report.json",
+    "index.md",
+    "project-overview.md",
+    "architecture.md",
+    "source-tree-analysis.md",
+    "api-contracts.md",
+    "data-models.md",
+    "component-inventory.md",
+    "development-guide.md"
+  ],
+  "findings": {
+    "project_classification": {
+      "repository_type": "monolith",
+      "primary_tech": "Next.js 16 + React 19 + Prisma 7 + Postgres"
+    },
+    "technology_stack": "Next.js 16.1.6, React 19.2.3, Prisma 7.4.2 (PrismaPg adapter), Tailwind CSS v4, Google Gemini 2.5 Flash, bcryptjs, linkedom",
+    "api": "16 endpoints documented",
+    "data": "9 Prisma models documented",
+    "components": "14 React components + 2 hooks documented"
+  },
+  "resume_instructions": "Workflow complete — no resume required."
+}
