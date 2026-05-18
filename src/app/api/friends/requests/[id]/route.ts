@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { sendPushToUser } from "@/lib/push";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -8,7 +9,7 @@ interface RouteContext {
 
 // PATCH /api/friends/requests/:id — Accept or decline a friend request
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -42,6 +43,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     where: { id },
     data: { status: action === "accept" ? "accepted" : "declined" },
   });
+
+  if (action === "accept") {
+    void sendPushToUser(friendRequest.senderId, {
+      title: "Friend request accepted",
+      body: `${user.name} accepted your friend request`,
+      data: { type: "friend_accept", userId: user.id },
+    });
+  }
 
   return NextResponse.json(updated);
 }

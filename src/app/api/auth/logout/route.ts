@@ -1,10 +1,18 @@
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { AUTH_COOKIE, AUTH_STATUS_COOKIE, destroySession } from "@/lib/auth";
 
-export async function POST() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(AUTH_COOKIE)?.value;
+export async function POST(request: NextRequest) {
+  // Accept bearer token (iOS) or cookie (web)
+  const authHeader = request.headers.get("authorization");
+  let token: string | undefined;
+  if (authHeader?.startsWith("Bearer ")) {
+    token = authHeader.slice(7).trim();
+  }
+  if (!token) {
+    const cookieStore = await cookies();
+    token = cookieStore.get(AUTH_COOKIE)?.value;
+  }
 
   if (token) {
     await destroySession(token);

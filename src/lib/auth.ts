@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 import bcrypt from "bcryptjs";
+import type { NextRequest } from "next/server";
 import { prisma } from "./prisma";
 
 export const AUTH_COOKIE = "auth-token";
@@ -35,9 +36,21 @@ export async function destroySession(token: string): Promise<void> {
   await prisma.session.deleteMany({ where: { token } });
 }
 
-export async function getCurrentUser() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(AUTH_COOKIE)?.value;
+export async function getCurrentUser(request?: NextRequest) {
+  let token: string | undefined;
+
+  if (request) {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.slice(7).trim();
+    }
+  }
+
+  if (!token) {
+    const cookieStore = await cookies();
+    token = cookieStore.get(AUTH_COOKIE)?.value;
+  }
+
   if (!token) return null;
 
   const session = await prisma.session.findUnique({

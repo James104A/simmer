@@ -5,7 +5,7 @@ import { getFriendIds } from "@/lib/friends";
 
 // POST /api/feed — Create a feed event
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
 // GET /api/feed — Get activity feed from friends
 export async function GET(request: NextRequest) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

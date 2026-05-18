@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 
 // GET /api/friends/search?q=... — Search users by name or email
 export async function GET(request: NextRequest) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

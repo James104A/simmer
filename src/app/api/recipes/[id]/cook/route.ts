@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { getPartnerId } from "@/lib/partner";
+import { sendPushToUser } from "@/lib/push";
 
 interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
 // GET /api/recipes/:id/cook — Get cook history for current user
-export async function GET(_request: NextRequest, context: RouteContext) {
-  const user = await getCurrentUser();
+export async function GET(request: NextRequest, context: RouteContext) {
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -25,7 +27,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
 // POST /api/recipes/:id/cook — Log a cook
 export async function POST(request: NextRequest, context: RouteContext) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     recipeUpdate.isFavorite = true;
   }
 
-  const [cookLog] = await prisma.$transaction([
+  const [cookLog, updatedRecipe] = await prisma.$transaction([
     prisma.cookLog.create({
       data: { recipeId: id, userId: user.id, cookedAt, notes },
     }),
@@ -98,12 +100,21 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }),
   ]);
 
+  const partnerId = await getPartnerId(user.id);
+  if (partnerId) {
+    void sendPushToUser(partnerId, {
+      title: favorite ? "New favorite!" : "Cooking activity",
+      body: `${user.name} cooked ${updatedRecipe.title}${favorite ? " and marked it a favorite" : ""}`,
+      data: { type: "partner_cook", recipeId: id },
+    });
+  }
+
   return NextResponse.json(cookLog, { status: 201 });
 }
 
 // DELETE /api/recipes/:id/cook — Remove a cook log entry (own only)
 export async function DELETE(request: NextRequest, context: RouteContext) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

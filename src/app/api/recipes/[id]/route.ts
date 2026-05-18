@@ -9,9 +9,9 @@ interface RouteContext {
 }
 
 // GET /api/recipes/:id — Get a single recipe (own, partner's, friend's, or saved)
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   const { id } = await context.params;
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
 
   const recipe = await prisma.recipe.findUnique({
     where: { id },
@@ -49,7 +49,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
 // PATCH /api/recipes/:id — Update a recipe (owner or partner)
 export async function PATCH(request: NextRequest, context: RouteContext) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -77,8 +77,8 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 }
 
 // DELETE /api/recipes/:id — Delete a recipe (owner or partner)
-export async function DELETE(_request: NextRequest, context: RouteContext) {
-  const user = await getCurrentUser();
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

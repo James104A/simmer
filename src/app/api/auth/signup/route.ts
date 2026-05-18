@@ -41,7 +41,12 @@ export async function POST(request: NextRequest) {
     const { token, expires } = await createSession(user.id);
 
     const response = NextResponse.json(
-      { success: true, user: { id: user.id, name: user.name, email: user.email } },
+      {
+        success: true,
+        token,
+        expiresAt: expires.toISOString(),
+        user: { id: user.id, name: user.name, email: user.email },
+      },
       { status: 201 }
     );
 

@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { hasPartnership } from "@/lib/partner";
+import { sendPushToUser } from "@/lib/push";
 
 // GET /api/partner — Get current partner info
-export async function GET() {
-  const user = await getCurrentUser();
+export async function GET(request: NextRequest) {
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -39,7 +40,7 @@ export async function GET() {
 
 // POST /api/partner — Send partner invite
 export async function POST(request: NextRequest) {
-  const user = await getCurrentUser();
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -93,12 +94,18 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  void sendPushToUser(target.id, {
+    title: "Partner invitation",
+    body: `${user.name} invited you to share a cookbook`,
+    data: { type: "partner_invite", senderId: user.id },
+  });
+
   return NextResponse.json(partnership, { status: 201 });
 }
 
 // DELETE /api/partner — Unlink from partner
-export async function DELETE() {
-  const user = await getCurrentUser();
+export async function DELETE(request: NextRequest) {
+  const user = await getCurrentUser(request);
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
