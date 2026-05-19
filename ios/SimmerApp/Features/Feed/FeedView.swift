@@ -31,6 +31,9 @@ struct FeedView: View {
                             } label: {
                                 FeedRow(event: event)
                             }
+                            .listRowInsets(EdgeInsets())
+                            .alignmentGuide(.listRowSeparatorLeading) { _ in 16 }
+                            .alignmentGuide(.listRowSeparatorTrailing) { d in d[.trailing] - 16 }
                             .swipeActions {
                                 Button(role: .destructive) {
                                     reportingEvent = event
@@ -91,7 +94,8 @@ struct FeedRow: View {
             Spacer(minLength: 0)
             eventIcon
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 
     private var header: String {

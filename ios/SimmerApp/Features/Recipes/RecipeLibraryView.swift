@@ -5,7 +5,10 @@ struct RecipeLibraryView: View {
     @State private var showFilters = false
     @State private var showAddSheet = false
 
-    private let gridColumns = [GridItem(.adaptive(minimum: 160), spacing: 12)]
+    private let gridColumns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12)
+    ]
 
     var body: some View {
         NavigationStack {
@@ -126,8 +129,11 @@ struct RecipeCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            RecipeThumbnail(imageURL: recipe.imageUrl, title: recipe.title)
-                .aspectRatio(1, contentMode: .fill)
+            Color.clear
+                .aspectRatio(1, contentMode: .fit)
+                .overlay {
+                    RecipeThumbnail(imageURL: recipe.imageUrl, title: recipe.title)
+                }
                 .overlay(alignment: .topTrailing) {
                     if recipe.isFavorite {
                         Image(systemName: "heart.fill")
@@ -137,8 +143,13 @@ struct RecipeCard: View {
                             .padding(6)
                     }
                 }
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             VStack(alignment: .leading, spacing: 4) {
-                Text(recipe.title).font(.callout.bold()).lineLimit(2)
+                Text(recipe.title)
+                    .font(.callout.bold())
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 6) {
                     if let t = recipe.totalTimeMinutes {
                         Label("\(t)m", systemImage: "clock")
@@ -153,8 +164,10 @@ struct RecipeCard: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(8)
+        .frame(maxWidth: .infinity)
         .background(Color(uiColor: .secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }

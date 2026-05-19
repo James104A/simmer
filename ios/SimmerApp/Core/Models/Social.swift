@@ -38,8 +38,13 @@ struct FeedEvent: Codable, Identifiable, Hashable, Sendable {
     let recipeId: String?
     let metadata: String?
     let createdAt: Date
-    let user: Friend
+    let user: FeedUser
     let recipe: FeedRecipeRef?
+
+    struct FeedUser: Codable, Hashable, Sendable {
+        let id: String
+        let name: String
+    }
 
     struct FeedRecipeRef: Codable, Hashable, Sendable {
         let id: String

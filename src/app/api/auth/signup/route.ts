@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         success: true,
         token,
         expiresAt: expires.toISOString(),
-        user: { id: user.id, name: user.name, email: user.email },
+        user: { id: user.id, name: user.name, email: user.email, hasSeenOnboarding: user.hasSeenOnboarding },
       },
       { status: 201 }
     );
