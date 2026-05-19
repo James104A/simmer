@@ -482,12 +482,12 @@ enum AnyEncodableValue: Encodable {
 }
 
 extension ISO8601DateFormatter {
-    static let plain: ISO8601DateFormatter = {
+    nonisolated(unsafe) static let plain: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime]
         return f
     }()
-    static let withFractional: ISO8601DateFormatter = {
+    nonisolated(unsafe) static let withFractional: ISO8601DateFormatter = {
         let f = ISO8601DateFormatter()
         f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return f

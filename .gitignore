@@ -62,3 +62,7 @@ venv/
 
 # misc
 *.pem
+
+# Claude Code worktrees / accidental scratch dirs
+.claude/worktrees/
+bmad-help what should I do first?/

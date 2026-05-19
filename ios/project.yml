@@ -103,18 +103,3 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.simmer.app.tests
-
-schemes:
-  Simmer:
-    build:
-      targets:
-        Simmer: all
-        ShareExtension: all
-    run:
-      config: Debug
-    test:
-      config: Debug
-      targets:
-        - SimmerAppTests
-    archive:
-      config: Release
