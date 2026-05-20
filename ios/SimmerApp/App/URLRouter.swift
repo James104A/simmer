@@ -1,7 +1,7 @@
 import Foundation
 
 /// Parses incoming URLs (custom scheme `simmer://…` or universal links
-/// `https://simmer.app/…`) into AppState deep links.
+/// `https://simmerfam.com/…`) into AppState deep links.
 enum URLRouter {
     static func route(_ url: URL) -> AppState.DeepLink? {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {

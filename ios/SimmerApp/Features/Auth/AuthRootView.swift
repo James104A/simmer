@@ -62,7 +62,7 @@ struct AuthRootView: View {
                 Text(appleError).font(.caption).foregroundStyle(.red)
             }
 
-            Text("By continuing you agree to our [Terms](https://simmer.app/terms) and [Privacy Policy](https://simmer.app/privacy).")
+            Text("By continuing you agree to our [Terms](https://simmerfam.com/terms) and [Privacy Policy](https://simmerfam.com/privacy).")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

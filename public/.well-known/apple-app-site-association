@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["QA38BAD9RK.com.frauen.simmer"],
+        "components": [
+          { "/": "/feed", "comment": "Open the social feed" },
+          { "/": "/friends", "comment": "Open friends list" },
+          { "/": "/recipes/*", "comment": "Open a specific recipe" },
+          { "/": "/partner/invite", "?": { "from": "?*" }, "comment": "Accept a partner invite" }
+        ]
+      }
+    ]
+  }
+}

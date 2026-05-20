@@ -28,17 +28,17 @@ In [developer.apple.com](https://developer.apple.com/account):
 
 1. **Team ID** — note it (10 chars). Xcode will use this for signing.
 2. **Bundle IDs** (Certificates, Identifiers & Profiles → Identifiers):
-   - `com.simmer.app` — main app. Enable capabilities: *Push Notifications*,
-     *Sign In with Apple*, *App Groups (group.com.simmer.app)*,
+   - `com.frauen.simmer` — main app. Enable capabilities: *Push Notifications*,
+     *Sign In with Apple*, *App Groups (group.com.frauen.simmer)*,
      *Associated Domains*.
-   - `com.simmer.app.ShareExtension` — share extension. Enable *App Groups*.
-3. **App Group** — create `group.com.simmer.app`.
+   - `com.frauen.simmer.ShareExtension` — share extension. Enable *App Groups*.
+3. **App Group** — create `group.com.frauen.simmer`.
 4. **APNs Key** — Keys → +Key → check *Apple Push Notifications service*.
    Download the `.p8` file. Note the Key ID. You'll upload this to the
    backend (see section 5).
-5. **Associated Domains** — if you want universal links (`https://simmer.app/recipes/xxx`
+5. **Associated Domains** — if you want universal links (`https://simmerfam.com/recipes/xxx`
    opening the app), add `apple-app-site-association` JSON at
-   `https://simmer.app/.well-known/apple-app-site-association`.
+   `https://simmerfam.com/.well-known/apple-app-site-association`.
 
 ## 3. Building in Xcode
 
@@ -63,13 +63,13 @@ The Next.js backend now expects these for full iOS support:
 
 ```bash
 # Sign in with Apple — verifies id_token audience
-APPLE_BUNDLE_ID=com.simmer.app
+APPLE_BUNDLE_ID=com.frauen.simmer
 
 # APNs — for push notifications
 APNS_TEAM_ID=XXXXXXXXXX          # 10-char Apple Team ID
 APNS_KEY_ID=XXXXXXXXXX           # 10-char Key ID from the .p8 key
 APNS_KEY_P8="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
-APNS_BUNDLE_ID=com.simmer.app
+APNS_BUNDLE_ID=com.frauen.simmer
 APNS_ENVIRONMENT=development     # or "production"
 ```
 
@@ -95,8 +95,8 @@ npx prisma migrate dev      # local
   The XcodeGen config wires it up.
 - **Screenshots**: required for 6.9" and 6.7" displays minimum. Use the simulator
   (Device → Screenshot) or physical device. iPad screenshots only if you ship iPad support.
-- **Privacy Policy URL**: required. Host at `https://simmer.app/privacy`.
-- **Terms URL**: host at `https://simmer.app/terms`.
+- **Privacy Policy URL**: required. Host at `https://simmerfam.com/privacy`.
+- **Terms URL**: host at `https://simmerfam.com/terms`.
 - **App Privacy Nutrition Label** (in App Store Connect): declare collection
   of email, name, user-generated content (recipes/notes), contacts (friends via email), and
   analytics (none if you don't add PostHog/Mixpanel later).
@@ -164,7 +164,7 @@ ios/
 ## 10. Common pitfalls
 
 - **Share Extension can't read Keychain** → verify both targets have the
-  same App Group (`group.com.simmer.app`) in Signing & Capabilities.
+  same App Group (`group.com.frauen.simmer`) in Signing & Capabilities.
 - **Push notifications don't arrive** → check `aps-environment` in
   `Simmer.entitlements` matches `APNS_ENVIRONMENT` env var
   (`development` for debug builds, `production` for TestFlight/App Store).

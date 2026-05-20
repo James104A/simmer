@@ -22,7 +22,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.simmer.app</string>
+			<string>com.frauen.simmer</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>simmer</string>

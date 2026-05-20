@@ -8,7 +8,7 @@ import OSLog
 /// POST /api/recipes to save. Stays under Apple's 60s extension budget by
 /// handing the user a success screen immediately after the recipe is saved.
 final class ShareViewController: UIViewController {
-    private let logger = Logger(subsystem: "com.simmer.app.ShareExtension", category: "Share")
+    private let logger = Logger(subsystem: "com.frauen.simmer.ShareExtension", category: "Share")
 
     private let card = UIView()
     private let titleLabel = UILabel()

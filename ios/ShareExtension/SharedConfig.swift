@@ -5,8 +5,8 @@ import Security
 /// directly without turning shared code into a framework; for just two
 /// primitives it's cleaner to duplicate than to set up a framework target.
 enum SharedConfig {
-    static let appGroupIdentifier = "group.com.simmer.app"
-    static let keychainService = "com.simmer.app.session"
+    static let appGroupIdentifier = "group.com.frauen.simmer"
+    static let keychainService = "com.frauen.simmer.session"
     static let apiBaseURL: URL = {
         if let raw = Bundle.main.object(forInfoDictionaryKey: "SimmerAPIBaseURL") as? String,
            let url = URL(string: raw) {
@@ -15,7 +15,7 @@ enum SharedConfig {
         #if DEBUG
         return URL(string: "http://localhost:3000")!
         #else
-        return URL(string: "https://simmer.app")!
+        return URL(string: "https://simmerfam.com")!
         #endif
     }()
 }

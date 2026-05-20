@@ -11,7 +11,7 @@ import { createPublicKey, verify as cryptoVerify } from "crypto";
 
 const APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys";
 const APPLE_ISSUER = "https://appleid.apple.com";
-const APPLE_AUDIENCE = process.env.APPLE_BUNDLE_ID ?? "com.simmer.app";
+const APPLE_AUDIENCE = process.env.APPLE_BUNDLE_ID ?? "com.frauen.simmer";
 
 type AppleKey = {
   kty: string;

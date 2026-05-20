@@ -11,15 +11,15 @@ enum AppConfig {
         #if DEBUG
         return URL(string: "http://localhost:3000")!
         #else
-        return URL(string: "https://simmer.app")!
+        return URL(string: "https://simmerfam.com")!
         #endif
     }()
 
-    static let appGroupIdentifier = "group.com.simmer.app"
-    static let keychainService = "com.simmer.app.session"
-    static let bundleIdentifier = Bundle.main.bundleIdentifier ?? "com.simmer.app"
+    static let appGroupIdentifier = "group.com.frauen.simmer"
+    static let keychainService = "com.frauen.simmer.session"
+    static let bundleIdentifier = Bundle.main.bundleIdentifier ?? "com.frauen.simmer"
     static let appStoreURL = URL(string: "https://apps.apple.com/app/simmer/id0000000000")!
-    static let privacyPolicyURL = URL(string: "https://simmer.app/privacy")!
-    static let termsURL = URL(string: "https://simmer.app/terms")!
-    static let supportEmail = "support@simmer.app"
+    static let privacyPolicyURL = URL(string: "https://simmerfam.com/privacy")!
+    static let termsURL = URL(string: "https://simmerfam.com/terms")!
+    static let supportEmail = "jfrauen@me.com"
 }

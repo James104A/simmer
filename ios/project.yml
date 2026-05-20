@@ -1,6 +1,6 @@
 name: Simmer
 options:
-  bundleIdPrefix: com.simmer
+  bundleIdPrefix: com.frauen
   deploymentTarget:
     iOS: "17.0"
   developmentLanguage: en
@@ -54,12 +54,12 @@ targets:
         ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: public.app-category.food-and-drink
         CFBundleURLTypes:
-          - CFBundleURLName: com.simmer.app
+          - CFBundleURLName: com.frauen.simmer
             CFBundleURLSchemes:
               - simmer
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.simmer.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.frauen.simmer
         TARGETED_DEVICE_FAMILY: "1"
         SUPPORTS_MACCATALYST: NO
         CODE_SIGN_ENTITLEMENTS: SimmerApp/Resources/Simmer.entitlements
@@ -89,7 +89,7 @@ targets:
               NSExtensionActivationSupportsText: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.simmer.app.ShareExtension
+        PRODUCT_BUNDLE_IDENTIFIER: com.frauen.simmer.ShareExtension
         TARGETED_DEVICE_FAMILY: "1"
         CODE_SIGN_ENTITLEMENTS: ShareExtension/ShareExtension.entitlements
 
@@ -102,4 +102,4 @@ targets:
       - target: Simmer
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.simmer.app.tests
+        PRODUCT_BUNDLE_IDENTIFIER: com.frauen.simmer.tests

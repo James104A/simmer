@@ -99,5 +99,5 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 }
 
 extension Notification.Name {
-    static let simmerDeepLink = Notification.Name("com.simmer.app.deepLink")
+    static let simmerDeepLink = Notification.Name("com.frauen.simmer.deepLink")
 }

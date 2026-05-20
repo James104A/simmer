@@ -6,7 +6,7 @@ import { prisma } from "./prisma";
 //   APNS_TEAM_ID         — Apple Developer Team ID (10 chars)
 //   APNS_KEY_ID          — Key ID from APNs key in Apple Developer portal
 //   APNS_KEY_P8          — Contents of the .p8 private key (PEM, newlines preserved)
-//   APNS_BUNDLE_ID       — Bundle identifier, e.g. com.simmer.app
+//   APNS_BUNDLE_ID       — Bundle identifier, e.g. com.frauen.simmer
 //   APNS_ENVIRONMENT     — "development" or "production" (default: development)
 
 const APNS_HOST_PROD = "https://api.push.apple.com";
@@ -98,7 +98,7 @@ export async function sendPushToUser(
     return;
   }
 
-  const bundleId = process.env.APNS_BUNDLE_ID ?? "com.simmer.app";
+  const bundleId = process.env.APNS_BUNDLE_ID ?? "com.frauen.simmer";
   const host =
     process.env.APNS_ENVIRONMENT === "production"
       ? APNS_HOST_PROD
